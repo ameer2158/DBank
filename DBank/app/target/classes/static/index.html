@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Digital Bank – API Test UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+          --bg:#0b1220;
+          --card:#121a2b;
+          --muted:#9fb0d1;
+          --text:#e8eefc;
+          --accent:#6aa1ff;
+          --accent-2:#30d0a4;
+          --danger:#ff6b6b;
+          --border:#1e2a44;
+          --input:#0f172a;
+          --chip:#203055;
+        }
+        *{box-sizing:border-box}
+        body{
+          margin:0; padding:32px; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+          background: radial-gradient(1200px 800px at 80% -10%, #1b2a4a 0%, transparent 60%), var(--bg);
+          color: var(--text);
+        }
+        h1{margin:0 0 16px; font-weight:700; letter-spacing:.2px}
+        .sub{color:var(--muted); margin-bottom:24px}
+        .row{display:grid; grid-template-columns: 1fr; gap:18px}
+        @media (min-width: 980px){ .row{grid-template-columns: 1fr 1fr} }
+        .card{
+          background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+          border: 1px solid var(--border); border-radius:16px; padding:18px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+        .card h2{margin:0 0 4px}
+        .card h3{margin:16px 0 8px; font-size: 15px; color:#cfe1ff}
+        label{display:block; font-size:12px; color:var(--muted); margin:8px 0 6px}
+        input, select, textarea{
+          width:100%; background:var(--input); color:var(--text);
+          border:1px solid var(--border); border-radius:10px; padding:10px 12px;
+          outline:none; transition: all .15s ease;
+        }
+        input:focus, select:focus, textarea:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(106,161,255,.15)}
+        .grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+        .hidden{display:none}
+        .controls{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px}
+        button{
+          appearance:none; border:1px solid var(--border); color:var(--text); background:#16223a;
+          padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600; letter-spacing:.2px;
+          transition: transform .04s ease, background .2s ease, border-color .2s ease;
+        }
+        button:hover{ background:#1b2a4a; border-color:#2b3e68 }
+        button:active{ transform: translateY(1px) }
+        .btn-accent{ background: linear-gradient(180deg, #79b2ff, #4e8df6); color:#081126; border: none }
+        .btn-accent:hover{ filter: brightness(1.02) }
+        .tag{
+          display:inline-block; padding:4px 8px; background:var(--chip); color:#cfe1ff; border-radius:999px; font-size:12px;
+          border:1px solid var(--border); margin-left:8px
+        }
+        .response{
+          margin-top:12px; background: #0c1424; border:1px solid var(--border); border-radius:12px;
+          padding:12px; max-height:300px; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+          font-size:12.5px; line-height:1.35
+        }
+        .status{
+          font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; margin-top:8px
+        }
+        .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block }
+        .dot.ok{ background: var(--accent-2) }
+        .dot.err{ background: var(--danger) }
+        .header{
+          display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px
+        }
+        .base{
+          display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+          background: #0f1930; border:1px solid var(--border); padding:10px 12px; border-radius:12px
+        }
+        .base input{ width:360px; max-width:100% }
+        .kbd{
+          background:#0c1424; border:1px solid var(--border); padding:2px 6px; border-radius:6px; font-size:12px; color:#cfe1ff
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div>
+        <h1>Digital Bank</h1>
+    </div>
+    <div class="base">
+        <span class="kbd">Base URL</span>
+        <input id="baseUrl" value="http://localhost:8080/api" />
+        <button class="btn-accent" onclick="ping()">Ping</button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Customers -->
+    <div class="card">
+        <h2>Customers <span class="tag">/api/customers</span></h2>
+
+        <h3>Create Customer</h3>
+        <div class="grid">
+            <div>
+                <label>Name</label>
+                <input id="custName" placeholder="e.g., Dana Cohen" />
+            </div>
+            <div>
+                <label>Personal ID <span class="tag">required</span></label>
+                <input id="custPersonalId" placeholder="personal_id" />
+            </div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <label>Type</label>
+                <select id="custType" onchange="toggleBusinessField()">
+                    <option value="INDIVIDUAL">INDIVIDUAL</option>
+                    <option value="BUSINESS">BUSINESS</option>
+                    <option value="VIP">VIP</option>
+                </select>
+            </div>
+            <div id="businessField" class="hidden">
+                <label>Business Number</label>
+                <input id="custBusinessNumber" placeholder="businessNumber" />
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-accent" onclick="createCustomer()">Create Customer</button>
+            <button onclick="listCustomers()">List All</button>
+        </div>
+
+        <h3>Get Customer by ID</h3>
+        <div class="controls">
+            <input id="custId" placeholder="Customer ID" />
+            <button onclick="getCustomer()">Get</button>
+        </div>
+
+        <div class="status" id="statusCustomers"><span class="dot"></span><span>Ready</span></div>
+        <pre class="response" id="respCustomers">// Customers responses appear here…</pre>
+    </div>
+
+    <!-- Accounts -->
+    <div class="card">
+        <h2>Accounts <span class="tag">/api/accounts</span></h2>
+
+        <h3>Create Account</h3>
+        <div class="grid">
+            <div>
+                <label>Customer ID</label>
+                <input id="accCustomerId" placeholder="Existing customer ID" />
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-accent" onclick="createAccount()">Create Account</button>
+            <button onclick="listAccounts()">List All</button>
+        </div>
+
+        <h3>Get Account by ID</h3>
+        <div class="controls">
+            <input id="accId" placeholder="Account ID" />
+            <button onclick="getAccount()">Get</button>
+        </div>
+
+        <div class="status" id="statusAccounts"><span class="dot"></span><span>Ready</span></div>
+        <pre class="response" id="respAccounts">// Accounts responses appear here…</pre>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card">
+        <h2>Transactions <span class="tag">/api/transactions</span></h2>
+
+        <h3>Create Transaction</h3>
+        <div class="grid">
+            <div>
+                <label>From Account ID</label>
+                <input id="txFrom" placeholder="source account id" />
+            </div>
+            <div>
+                <label>To Account ID</label>
+                <input id="txTo" placeholder="destination account id" />
+            </div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <label>Amount</label>
+                <input id="txAmount" type="number" step="0.01" placeholder="e.g., 125.50" />
+            </div>
+            <div>
+                <label>Currency</label>
+                <input id="txCurrency" value="USD" />
+            </div>
+        </div>
+
+        <label>Description</label>
+        <input id="txDesc" placeholder="transaction description" />
+
+        <div class="controls">
+            <button class="btn-accent" onclick="createTransaction()">Create Transaction</button>
+            <button onclick="listTransactions()">List All</button>
+        </div>
+
+        <h3>Get Transaction by ID</h3>
+        <div class="controls">
+            <input id="txId" placeholder="Transaction ID" />
+            <button onclick="getTransaction()">Get</button>
+        </div>
+
+        <div class="status" id="statusTransactions"><span class="dot"></span><span>Ready</span></div>
+        <pre class="response" id="respTransactions">// Transactions responses appear here…</pre>
+    </div>
+
+    <!-- Tips -->
+    <div class="card">
+        <h2>Tips</h2>
+        <ul>
+            <li>Set the Base URL above if your server isn’t on <code>http://localhost:8080/api</code>.</li>
+            <li>Use <span class="kbd">Ctrl/Cmd + Shift + R</span> for a hard refresh if the page looks cached.</li>
+            <li>When <b>BUSINESS</b> type is selected, the <i>Business Number</i> field appears automatically.</li>
+            <li><b>personal_id</b> is required for all customer types (validated on the server; also visible here).</li>
+            <li><b>Transaction Publishing</b>: When creating a transaction, we will have attempt to publish the event to Kafka in synchronous mode.
+                If Kafka is unavailable, it retries up to 1 min, After that, the transaction will still be processed ignoring publishing to Kafka.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    function base(){ return document.getElementById('baseUrl').value.trim().replace(/\/$/,''); }
+
+    function setStatus(section, ok, text){
+      const el = document.getElementById('status' + section);
+      const dot = el.querySelector('.dot');
+      el.querySelector('span:nth-child(2)').textContent = text;
+      dot.classList.remove('ok', 'err');
+      if(ok === true) dot.classList.add('ok');
+      if(ok === false) dot.classList.add('err');
+    }
+
+    function show(targetId, data){
+      const box = document.getElementById('resp' + targetId);
+      try{
+        box.textContent = (typeof data === 'string') ? data : JSON.stringify(data, null, 2);
+      }catch(e){
+        box.textContent = String(data);
+      }
+    }
+
+    async function api(target, path, opts={}){
+      const url = base() + path;
+      setStatus(target, null, 'Requesting…');
+      const start = Date.now();
+      try{
+        const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+        const ct = res.headers.get('content-type') || '';
+        let body;
+        if (ct.includes('application/json')) body = await res.json();
+        else body = await res.text();
+
+        const ms = Date.now() - start;
+        setStatus(target, res.ok, (res.ok ? 'OK' : 'Error') + ` • ${res.status} • ${ms}ms`);
+        show(target, body);
+      }catch(e){
+        const ms = Date.now() - start;
+        setStatus(target, false, `Network error • ${ms}ms`);
+        show(target, e.toString());
+      }
+    }
+
+    // ---------- dynamic fields ----------
+    function toggleBusinessField(){
+      const type = document.getElementById('custType').value;
+      document.getElementById('businessField').classList.toggle('hidden', type !== 'BUSINESS');
+    }
+    toggleBusinessField();
+
+    // ---------- Customers ----------
+    function createCustomer(){
+      const type = document.getElementById('custType').value;
+      const body = {
+        name: document.getElementById('custName').value,
+        personal_id: document.getElementById('custPersonalId').value,
+        type
+      };
+      if (type === 'BUSINESS'){
+        body.businessNumber = document.getElementById('custBusinessNumber').value;
+      }
+      api('Customers', '/customers', { method:'POST', body: JSON.stringify(body) });
+    }
+    function listCustomers(){ api('Customers', '/customers'); }
+    function getCustomer(){ api('Customers', '/customers/' + encodeURIComponent(document.getElementById('custId').value)); }
+
+    // ---------- Accounts ----------
+    function createAccount(){
+      const body = { customerId: document.getElementById('accCustomerId').value };
+      api('Accounts', '/accounts', { method:'POST', body: JSON.stringify(body) });
+    }
+    function listAccounts(){ api('Accounts', '/accounts'); }
+    function getAccount(){ api('Accounts', '/accounts/' + encodeURIComponent(document.getElementById('accId').value)); }
+
+    // ---------- Transactions ----------
+    function createTransaction(){
+      const body = {
+        event_type: 'TRANSACTION',
+        timestamp: new Date().toISOString(),
+        transaction_id: (crypto.randomUUID ? crypto.randomUUID() : ('tx_' + Date.now())),
+        from_account: document.getElementById('txFrom').value,
+        to_account: document.getElementById('txTo').value,
+        amount: parseFloat(document.getElementById('txAmount').value),
+        currency: document.getElementById('txCurrency').value,
+        description: document.getElementById('txDesc').value
+      };
+      api('Transactions', '/transactions', { method:'POST', body: JSON.stringify(body) });
+    }
+    function listTransactions(){ api('Transactions', '/transactions'); }
+    function getTransaction(){ api('Transactions', '/transactions/' + encodeURIComponent(document.getElementById('txId').value)); }
+
+    // ---------- Ping ----------
+    async function ping(){
+      api('Customers', '/customers');
+    }
+</script>
+</body>
+</html>
