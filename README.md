@@ -1,12 +1,4 @@
 # DBank
-q: Describe what happens when Kafka or the mySql database goes down?
-
-a: Kafka is down:
-   When creating a transaction, we will have attempt to publish the event to Kafka in synchronous mode in TransactionService.java
-   If Kafka is unavailable, it retries up to 1 min, After that, the transaction will still be processed ignoring publishing to Kafka (please refer to the try/ catch in KafkaTransactionProducer.java)
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 API's:
 
 Customer:
