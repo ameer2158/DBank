@@ -35,3 +35,9 @@ GET /api/transactions
 
 get Transaction by Id - 
 GET /api/transactions/{id} 
+
+
+
+to consume and print all messages from the bank.transactions.transfer topic starting from the beginning please run -->
+kafka-console-consumer.sh --bootstrap-server localhost:9092 \
+  --topic bank.transactions.transfer --from-beginning
